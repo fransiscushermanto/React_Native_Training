@@ -110,10 +110,11 @@ function UserRate({show, setShow}: IUserRateDialogProps) {
               }}>
               <View style={styles.starRatingWrapper}>
                 {rating.map((item) => {
+                  const itemStyle = {marginRight: item.id < 5 ? 18 : 0};
                   return (
                     <TouchableOpacity
                       onPress={() => onRatingClick(item.id)}
-                      style={{marginRight: item.id < 5 ? 18 : 0}}
+                      style={itemStyle}
                       key={item.id}>
                       {item.active ? <StarOn /> : <StarOff />}
                     </TouchableOpacity>
@@ -170,9 +171,7 @@ function UserRate({show, setShow}: IUserRateDialogProps) {
                       .length > 0
                       ? satisfactionItems
                           .filter((item) => item.active === true)
-                          .map((item) => {
-                            return item.label;
-                          })
+                          .map((item) => item.label)
                           .join(', ')
                       : 'Selected nothing'
                   }`,
