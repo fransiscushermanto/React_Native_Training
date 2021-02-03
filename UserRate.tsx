@@ -95,12 +95,10 @@ function UserRate({show, setShow}: IUserRateDialogProps) {
             </View>
           </View>
           <View style={styles.transactionReviewBodyWrapper}>
-            <View style={{marginBottom: 24}}>
-              <Text style={styles.transactionBodyTitle}>
-                How's your transaction experience?
-              </Text>
-            </View>
-            <View style={{marginBottom: 19}}>
+            <Text style={styles.transactionBodyTitle}>
+              How's your transaction experience?
+            </Text>
+            <View style={styles.ratingMascotIcon}>
               <GoodReview />
             </View>
             <View
@@ -287,6 +285,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Exo2-SemiBold',
     letterSpacing: -0.5,
     fontSize: 15,
+    marginBottom: 24,
   },
   starRatingWrapper: {
     display: 'flex',
@@ -303,6 +302,9 @@ const styles = StyleSheet.create({
   userSatisfactionTitle: {
     fontFamily: 'Exo2-SemiBold',
     marginBottom: 16,
+  },
+  ratingMascotIcon: {
+    marginBottom: 19,
   },
 });
 
