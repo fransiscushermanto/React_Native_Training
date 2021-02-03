@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
   View,
@@ -8,57 +8,79 @@ import {
 } from 'react-native';
 import {BottomSheet} from 'react-native-elements';
 import {IconClose, SwitzerlandFlag, GoodReview, StarOff, StarOn} from './Icons';
+import StarRating from './StarRating';
 
 interface IUserRateDialogProps {
   show: boolean;
   setShow: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-function UserRate({show, setShow}: IUserRateDialogProps) {
-  const [rating, setRating] = useState<Array<any>>([
-    {
-      id: 1,
-      active: false,
-    },
-    {
-      id: 2,
-      active: false,
-    },
-    {
-      id: 3,
-      active: false,
-    },
-    {
-      id: 4,
-      active: false,
-    },
-    {
-      id: 5,
-      active: false,
-    },
-  ]);
+function useAppRating(maxValue: number, satisfactionJSON: {good: Array<any>, neutral: Array<any>, bad: Array<any>}) {
+  const [rating, setRating] = useState<number>(0);
+  const [satisfactionsItem, setSatisfactionsItem] = useState<Array<any>>();
 
-  const [satisfactionItems, setSatisfactionItems] = useState<Array<any>>([
+  function handleRatingChange() {    
+    if (rating === 0 && rating === Math.round(maxValue/2)) {
+      setSatisfactionsItem(
+        satisfactionJSON.neutral.map(item => ({...item, active: false}))
+      )
+    }else if (rating < Math.round(maxValue/2)) {
+      setSatisfactionsItem(
+        satisfactionJSON.bad.map(item => ({...item, active: false}))
+      )
+      
+    }else if (rating > Math.round(maxValue/2)) {
+      setSatisfactionsItem(
+        satisfactionJSON.good.map(item => ({...item, active: false}))
+      )
+    }
+  }
+  
+  useEffect(() => {
+    handleRatingChange();
+  }, [rating])
+
+  return {
+    rating,
+    setRating,
+    satisfactionsItem,
+  }
+}
+
+
+function UserRate({show, setShow}: IUserRateDialogProps) {
+  const satisfactionJSON = {good: [
     {id: 1, label: 'Money arrived faster', active: false},
     {id: 2, label: 'Competitive rate', active: false},
     {id: 3, label: 'Easy to use', active: false},
     {id: 4, label: 'Clear informations', active: false},
     {id: 5, label: 'Excellen customer service', active: false},
-  ]);
+  ], bad: [
+    {id: 1, label: 'a', active: false},
+    {id: 2, label: 'b', active: false},
+    {id: 3, label: 'c', active: false},
+    {id: 4, label: 'd', active: false},
+    {id: 5, label: 'e', active: false},
+  ], neutral: [
+    {id: 1, label: 'f', active: false},
+    {id: 2, label: 'g', active: false},
+    {id: 3, label: 'h', active: false},
+    {id: 4, label: 'i', active: false},
+    {id: 5, label: 'j', active: false},
+  ]}
 
-  const onRatingClick = (id) => {
-    const temp = [...rating];
+  const {rating, setRating, satisfactionsItem} = useAppRating(5, satisfactionJSON);
+
+  const onRatingClick = (id: number) => {
     setRating(
-      temp.map((item) => {
-        return {
-          id: item.id,
-          active: id <= 1 && item.active ? false : item.id <= id ? true : false,
-        };
-      }),
+      rating.map((item) => ({
+        id: item.id,
+        active: id <= 1 && item.active ? false : item.id <= id,
+      })),
     );
   };
 
-  const onSelectSatisfaction = (id) => {
+  const onSelectSatisfaction = (id: number) => {
     setSatisfactionItems((prev) =>
       prev.map((item) => {
         return {
@@ -72,7 +94,7 @@ function UserRate({show, setShow}: IUserRateDialogProps) {
 
   return (
     <>
-      <BottomSheet isVisible={show}>
+      <BottomSheet modalProps={{}} isVisible={show}>
         <View style={styles.container}>
           <View style={styles.closeWrapper}>
             <TouchableOpacity onPress={() => setShow(false)}>
@@ -111,16 +133,7 @@ function UserRate({show, setShow}: IUserRateDialogProps) {
                 alignItems: 'center',
               }}>
               <View style={styles.starRatingWrapper}>
-                {rating.map((item) => {
-                  return (
-                    <TouchableOpacity
-                      onPress={() => onRatingClick(item.id)}
-                      style={{marginRight: item.id < 5 ? 18 : 0}}
-                      key={item.id}>
-                      {item.active ? <StarOn /> : <StarOff />}
-                    </TouchableOpacity>
-                  );
-                })}
+                <StarRating value={rating} maxValue={5}/>
               </View>
             </View>
           </View>
@@ -164,23 +177,22 @@ function UserRate({show, setShow}: IUserRateDialogProps) {
             </View>
           </View>
           <View style={{width: '100%'}}>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={() =>
                 ToastAndroid.show(
                   `${
-                    satisfactionItems.filter((item) => item.active === true)
-                      .length > 0
+                    satisfactionItems.filter(
+                      (item: any) => item.active === true,
+                    ).length > 0
                       ? satisfactionItems
-                          .filter((item) => item.active === true)
-                          .map((item) => {
-                            return item.label;
-                          })
+                          .filter((item: any) => item.active === true)
+                          .map((item: any) => item.label)
                           .join(', ')
                       : 'Selected nothing'
                   }`,
                   ToastAndroid.SHORT,
                 )
-              }
+              } */}
               style={{
                 width: '100%',
                 display: 'flex',
