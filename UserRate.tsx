@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   StyleSheet,
   View,
@@ -6,7 +6,9 @@ import {
   TouchableOpacity,
   ToastAndroid,
 } from 'react-native';
+import {useAppRating} from './useAppRating';
 import {BottomSheet} from 'react-native-elements';
+import StarRating from './StarRating';
 import {IconClose, SwitzerlandFlag, GoodReview, StarOff, StarOn} from './Icons';
 
 interface IUserRateDialogProps {
@@ -15,64 +17,55 @@ interface IUserRateDialogProps {
 }
 
 function UserRate({show, setShow}: IUserRateDialogProps) {
-  const [rating, setRating] = useState<Array<any>>([
-    {
-      id: 1,
-      active: false,
-    },
-    {
-      id: 2,
-      active: false,
-    },
-    {
-      id: 3,
-      active: false,
-    },
-    {
-      id: 4,
-      active: false,
-    },
-    {
-      id: 5,
-      active: false,
-    },
-  ]);
-
-  const [satisfactionItems, setSatisfactionItems] = useState<Array<any>>([
-    {id: 1, label: 'Money arrived faster', active: false},
-    {id: 2, label: 'Competitive rate', active: false},
-    {id: 3, label: 'Easy to use', active: false},
-    {id: 4, label: 'Clear informations', active: false},
-    {id: 5, label: 'Excellen customer service', active: false},
-  ]);
-
-  const onRatingClick = (id) => {
-    const temp = [...rating];
-    setRating(
-      temp.map((item) => {
-        return {
-          id: item.id,
-          active: id <= 1 && item.active ? false : item.id <= id ? true : false,
-        };
-      }),
-    );
+  const satisfactionJSON = {
+    good: [
+      {id: 1, label: 'Money arrived faster', active: false},
+      {id: 2, label: 'Competitive rate', active: false},
+      {id: 3, label: 'Easy to use', active: false},
+      {id: 4, label: 'Clear informations', active: false},
+      {id: 5, label: 'Excellen customer service', active: false},
+    ],
+    bad: [
+      {id: 1, label: 'Kamu Jelek', active: false},
+      {id: 2, label: 'Kamu Bau', active: false},
+      {id: 3, label: 'Kamu Garing', active: false},
+      {id: 4, label: 'Kamu Gk Keren', active: false},
+      {id: 5, label: 'Kamu Gk Gaul', active: false},
+    ],
+    neutral: [
+      {id: 1, label: 'Kamu Biasa aja', active: false},
+      {id: 2, label: 'Kamu Gk Wangi Gk Bau', active: false},
+      {id: 3, label: 'Kamu Lembek', active: false},
+      {id: 4, label: 'Kamu 1/2 Keren', active: false},
+      {id: 5, label: 'Kamu 1/2 Gaul', active: false},
+    ],
   };
 
-  const onSelectSatisfaction = (id) => {
-    setSatisfactionItems((prev) =>
-      prev.map((item) => {
-        return {
-          id: item.id,
-          label: item.label,
-          active: item.id === id ? !item.active : item.active,
-        };
-      }),
-    );
+  const {
+    rating,
+    setRating,
+    satisfactionItems,
+    setSatisfactionItems,
+  } = useAppRating(5, satisfactionJSON);
+
+  const onRatingClick = useCallback(
+    (id: number) => {
+      setRating(rating === id && rating === 1 ? 0 : id);
+    },
+    [rating, setRating],
+  );
+
+  const onSelectSatisfaction = (id: number) => {
+    let temp = [...satisfactionItems];
+    let target = temp.filter((tempItem) => tempItem.id === id)[0];
+    let indexTarget = temp.indexOf(target);
+    temp[indexTarget].active = !temp[indexTarget].active;
+    setSatisfactionItems(temp);
   };
 
   return (
     <>
-      <BottomSheet isVisible={show}>
+      <BottomSheet modalProps={{}} isVisible={show}>
         <View style={styles.container}>
           <View style={styles.closeWrapper}>
             <TouchableOpacity onPress={() => setShow(false)}>
@@ -109,17 +102,12 @@ function UserRate({show, setShow}: IUserRateDialogProps) {
                 alignItems: 'center',
               }}>
               <View style={styles.starRatingWrapper}>
-                {rating.map((item) => {
-                  const itemStyle = {marginRight: item.id < 5 ? 18 : 0};
-                  return (
-                    <TouchableOpacity
-                      onPress={() => onRatingClick(item.id)}
-                      style={itemStyle}
-                      key={item.id}>
-                      {item.active ? <StarOn /> : <StarOff />}
-                    </TouchableOpacity>
-                  );
-                })}
+                <StarRating
+                  onStarClick={onRatingClick}
+                  style={{marginBottom: 30}}
+                  value={rating}
+                  maxValue={5}
+                />
               </View>
             </View>
           </View>
@@ -129,73 +117,56 @@ function UserRate({show, setShow}: IUserRateDialogProps) {
                 Tell us what makes you satisfied
               </Text>
             </View>
-            <View
-              style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap'}}>
-              {satisfactionItems.map((satisfactionItem) => {
-                return (
-                  <TouchableOpacity
-                    onPress={() => onSelectSatisfaction(satisfactionItem.id)}
-                    style={{
-                      border: 1,
-                      borderStyle: 'solid',
-                      borderColor: satisfactionItem.active
-                        ? '#30A6FF'
-                        : '#C9D4DB',
-                      marginRight: 18,
-                      borderWidth: 1,
-                      paddingHorizontal: 12,
-                      paddingVertical: 3,
-                      marginBottom: 12,
-                      borderRadius: 13.5,
-                    }}
-                    key={satisfactionItem.id}>
-                    <Text
-                      style={{
-                        fontFamily: satisfactionItem.active
-                          ? 'Exo2-SemiBold'
-                          : 'Exo2-Regular',
-                      }}>
-                      {satisfactionItem.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+            <View style={styles.satisfactionItemWrapper}>
+              {satisfactionItems &&
+                satisfactionItems.map((satisfactionItem) => {
+                  function satisfactionBorderStyle(active: boolean = false) {
+                    return {
+                      ...styles.satisfactionItem,
+                      borderColor: active ? '#30A6FF' : '#C9D4DB',
+                    };
+                  }
+
+                  function satisfactionFontStyle(active: boolean = false) {
+                    return {
+                      fontFamily: active ? 'Exo2-SemiBold' : 'Exo2-Regular',
+                    };
+                  }
+                  return (
+                    <TouchableOpacity
+                      onPress={() => onSelectSatisfaction(satisfactionItem.id)}
+                      style={satisfactionBorderStyle(satisfactionItem.active)}
+                      key={satisfactionItem.id}>
+                      <Text style={satisfactionFontStyle()}>
+                        {satisfactionItem.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
             </View>
           </View>
-          <View style={{width: '100%'}}>
+          <View style={styles.submitButtonWrapper}>
             <TouchableOpacity
               onPress={() =>
                 ToastAndroid.show(
                   `${
-                    satisfactionItems.filter((item) => item.active === true)
-                      .length > 0
+                    satisfactionItems.filter(
+                      (satisfactionItem) => satisfactionItem.active === true,
+                    ).length > 0
                       ? satisfactionItems
-                          .filter((item) => item.active === true)
-                          .map((item) => item.label)
+                          .filter(
+                            (satisfactionItem) =>
+                              satisfactionItem.active === true,
+                          )
+                          .map((satisfactionItem) => satisfactionItem.id)
                           .join(', ')
-                      : 'Selected nothing'
+                      : 'Nothing Selected'
                   }`,
                   ToastAndroid.SHORT,
                 )
               }
-              style={{
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor: '#30A6FF',
-                height: 50,
-                borderRadius: 6,
-              }}>
-              <Text
-                style={{
-                  fontFamily: 'Exo2-Bold',
-                  color: '#FFFFFF',
-                  fontSize: 17,
-                }}>
-                Submit
-              </Text>
+              style={styles.submitButton}>
+              <Text style={styles.submitButtonText}>Submit</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -244,18 +215,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 13,
-    marginBottom: 28,
-  },
-  transactionIconFlagWrapper: {
-    maxWidth: 32,
-    width: 32,
-    maxHeight: 32,
-    height: 32,
-    display: 'flex',
-    justifyContent: 'center',
-    marginVertical: 5,
-    marginRight: 15,
+    marginBottom: 31,
   },
   transactionDetailInfoWrapper: {
     display: 'flex',
@@ -278,7 +238,18 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    marginBottom: 31,
+    paddingHorizontal: 13,
+  },
+  transactionIconFlagWrapper: {
+    maxWidth: 32,
+    width: 32,
+    maxHeight: 32,
+    height: 32,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 5,
+    marginRight: 15,
   },
   transactionBodyTitle: {
     fontFamily: 'Exo2-SemiBold',
@@ -305,6 +276,36 @@ const styles = StyleSheet.create({
   ratingMascotIcon: {
     marginBottom: 19,
   },
+  satisfactionItem: {
+    borderStyle: 'solid',
+    marginRight: 18,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    marginBottom: 12,
+    borderRadius: 13.5,
+  },
+  satisfactionItemWrapper: {
+    display: 'flex',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  submitButton: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#30A6FF',
+    height: 50,
+    borderRadius: 6,
+  },
+  submitButtonText: {
+    fontFamily: 'Exo2-Bold',
+    color: '#FFFFFF',
+    fontSize: 17,
+  },
+  submitButtonWrapper: {width: '100%'},
 });
 
 export default UserRate;
