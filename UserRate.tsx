@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback} from 'react';
 import {
   StyleSheet,
   View,
@@ -6,90 +6,61 @@ import {
   TouchableOpacity,
   ToastAndroid,
 } from 'react-native';
+import {useAppRating} from './useAppRating';
 import {BottomSheet} from 'react-native-elements';
-import {IconClose, SwitzerlandFlag, GoodReview, StarOff, StarOn} from './Icons';
 import StarRating from './StarRating';
+import {IconClose, SwitzerlandFlag, GoodReview} from './Icons';
 
 interface IUserRateDialogProps {
   show: boolean;
   setShow: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-function useAppRating(maxValue: number, satisfactionJSON: {good: Array<any>, neutral: Array<any>, bad: Array<any>}) {
-  const [rating, setRating] = useState<number>(0);
-  const [satisfactionsItem, setSatisfactionsItem] = useState<Array<any>>();
-
-  function handleRatingChange() {    
-    if (rating === 0 && rating === Math.round(maxValue/2)) {
-      setSatisfactionsItem(
-        satisfactionJSON.neutral.map(item => ({...item, active: false}))
-      )
-    }else if (rating < Math.round(maxValue/2)) {
-      setSatisfactionsItem(
-        satisfactionJSON.bad.map(item => ({...item, active: false}))
-      )
-      
-    }else if (rating > Math.round(maxValue/2)) {
-      setSatisfactionsItem(
-        satisfactionJSON.good.map(item => ({...item, active: false}))
-      )
-    }
-  }
-  
-  useEffect(() => {
-    handleRatingChange();
-  }, [rating])
-
-  return {
-    rating,
-    setRating,
-    satisfactionsItem,
-  }
-}
-
-
 function UserRate({show, setShow}: IUserRateDialogProps) {
-  const satisfactionJSON = {good: [
-    {id: 1, label: 'Money arrived faster', active: false},
-    {id: 2, label: 'Competitive rate', active: false},
-    {id: 3, label: 'Easy to use', active: false},
-    {id: 4, label: 'Clear informations', active: false},
-    {id: 5, label: 'Excellen customer service', active: false},
-  ], bad: [
-    {id: 1, label: 'a', active: false},
-    {id: 2, label: 'b', active: false},
-    {id: 3, label: 'c', active: false},
-    {id: 4, label: 'd', active: false},
-    {id: 5, label: 'e', active: false},
-  ], neutral: [
-    {id: 1, label: 'f', active: false},
-    {id: 2, label: 'g', active: false},
-    {id: 3, label: 'h', active: false},
-    {id: 4, label: 'i', active: false},
-    {id: 5, label: 'j', active: false},
-  ]}
-
-  const {rating, setRating, satisfactionsItem} = useAppRating(5, satisfactionJSON);
-
-  const onRatingClick = (id: number) => {
-    setRating(
-      rating.map((item) => ({
-        id: item.id,
-        active: id <= 1 && item.active ? false : item.id <= id,
-      })),
-    );
+  const satisfactionJSON = {
+    good: [
+      {id: 1, label: 'Money arrived faster', active: false},
+      {id: 2, label: 'Competitive rate', active: false},
+      {id: 3, label: 'Easy to use', active: false},
+      {id: 4, label: 'Clear informations', active: false},
+      {id: 5, label: 'Excellen customer service', active: false},
+    ],
+    bad: [
+      {id: 1, label: 'Kamu Jelek', active: false},
+      {id: 2, label: 'Kamu Bau', active: false},
+      {id: 3, label: 'Kamu Garing', active: false},
+      {id: 4, label: 'Kamu Gk Keren', active: false},
+      {id: 5, label: 'Kamu Gk Gaul', active: false},
+    ],
+    neutral: [
+      {id: 1, label: 'Kamu Biasa aja', active: false},
+      {id: 2, label: 'Kamu Gk Wangi Gk Bau', active: false},
+      {id: 3, label: 'Kamu Lembek', active: false},
+      {id: 4, label: 'Kamu 1/2 Keren', active: false},
+      {id: 5, label: 'Kamu 1/2 Gaul', active: false},
+    ],
   };
 
+  const {
+    rating,
+    setRating,
+    satisfactionItems,
+    setSatisfactionItems,
+  } = useAppRating(5, satisfactionJSON);
+
+  const onRatingClick = useCallback(
+    (id: number) => {
+      setRating(rating === id && rating === 1 ? 0 : id);
+    },
+    [rating, setRating],
+  );
+
   const onSelectSatisfaction = (id: number) => {
-    setSatisfactionItems((prev) =>
-      prev.map((item) => {
-        return {
-          id: item.id,
-          label: item.label,
-          active: item.id === id ? !item.active : item.active,
-        };
-      }),
-    );
+    let temp = [...satisfactionItems];
+    let target = temp.filter((tempItem) => tempItem.id === id)[0];
+    let indexTarget = temp.indexOf(target);
+    temp[indexTarget].active = !temp[indexTarget].active;
+    setSatisfactionItems(temp);
   };
 
   return (
@@ -117,12 +88,10 @@ function UserRate({show, setShow}: IUserRateDialogProps) {
             </View>
           </View>
           <View style={styles.transactionReviewBodyWrapper}>
-            <View style={{marginBottom: 24}}>
-              <Text style={styles.transactionBodyTitle}>
-                How's your transaction experience?
-              </Text>
-            </View>
-            <View style={{marginBottom: 19}}>
+            <Text style={styles.transactionBodyTitle}>
+              How's your transaction experience?
+            </Text>
+            <View style={styles.ratingMascotIcon}>
               <GoodReview />
             </View>
             <View
@@ -133,7 +102,12 @@ function UserRate({show, setShow}: IUserRateDialogProps) {
                 alignItems: 'center',
               }}>
               <View style={styles.starRatingWrapper}>
-                <StarRating value={rating} maxValue={5}/>
+                <StarRating
+                  onStarClick={onRatingClick}
+                  style={{marginBottom: 30}}
+                  value={rating}
+                  maxValue={5}
+                />
               </View>
             </View>
           </View>
@@ -143,74 +117,58 @@ function UserRate({show, setShow}: IUserRateDialogProps) {
                 Tell us what makes you satisfied
               </Text>
             </View>
-            <View
-              style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap'}}>
-              {satisfactionItems.map((satisfactionItem) => {
-                return (
-                  <TouchableOpacity
-                    onPress={() => onSelectSatisfaction(satisfactionItem.id)}
-                    style={{
-                      border: 1,
-                      borderStyle: 'solid',
-                      borderColor: satisfactionItem.active
-                        ? '#30A6FF'
-                        : '#C9D4DB',
-                      marginRight: 18,
-                      borderWidth: 1,
-                      paddingHorizontal: 12,
-                      paddingVertical: 3,
-                      marginBottom: 12,
-                      borderRadius: 13.5,
-                    }}
-                    key={satisfactionItem.id}>
-                    <Text
-                      style={{
-                        fontFamily: satisfactionItem.active
-                          ? 'Exo2-SemiBold'
-                          : 'Exo2-Regular',
-                      }}>
-                      {satisfactionItem.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+            <View style={styles.satisfactionItemWrapper}>
+              {satisfactionItems &&
+                satisfactionItems.map((satisfactionItem) => {
+                  function satisfactionBorderStyle(active: boolean = false) {
+                    return {
+                      ...styles.satisfactionItem,
+                      borderColor: active ? '#30A6FF' : '#C9D4DB',
+                    };
+                  }
+
+                  function satisfactionFontStyle(active: boolean = false) {
+                    return {
+                      fontFamily: active ? 'Exo2-SemiBold' : 'Exo2-Regular',
+                    };
+                  }
+                  return (
+                    <TouchableOpacity
+                      onPress={() => onSelectSatisfaction(satisfactionItem.id)}
+                      style={satisfactionBorderStyle(satisfactionItem.active)}
+                      key={satisfactionItem.id}>
+                      <Text style={satisfactionFontStyle()}>
+                        {satisfactionItem.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
             </View>
           </View>
-          <View style={{width: '100%'}}>
-            {/* <TouchableOpacity
+
+          <View style={styles.submitButtonWrapper}>
+            <TouchableOpacity
               onPress={() =>
                 ToastAndroid.show(
                   `${
                     satisfactionItems.filter(
-                      (item: any) => item.active === true,
+                      (satisfactionItem) => satisfactionItem.active === true,
                     ).length > 0
                       ? satisfactionItems
-                          .filter((item: any) => item.active === true)
-                          .map((item: any) => item.label)
+                          .filter(
+                            (satisfactionItem) =>
+                              satisfactionItem.active === true,
+                          )
+                          .map((satisfactionItem) => satisfactionItem.id)
+
                           .join(', ')
-                      : 'Selected nothing'
+                      : 'Nothing Selected'
                   }`,
                   ToastAndroid.SHORT,
                 )
-              } */}
-              style={{
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                backgroundColor: '#30A6FF',
-                height: 50,
-                borderRadius: 6,
-              }}>
-              <Text
-                style={{
-                  fontFamily: 'Exo2-Bold',
-                  color: '#FFFFFF',
-                  fontSize: 17,
-                }}>
-                Submit
-              </Text>
+              }
+              style={styles.submitButton}>
+              <Text style={styles.submitButtonText}>Submit</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -259,18 +217,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 13,
-    marginBottom: 28,
-  },
-  transactionIconFlagWrapper: {
-    maxWidth: 32,
-    width: 32,
-    maxHeight: 32,
-    height: 32,
-    display: 'flex',
-    justifyContent: 'center',
-    marginVertical: 5,
-    marginRight: 15,
+    marginBottom: 31,
   },
   transactionDetailInfoWrapper: {
     display: 'flex',
@@ -293,12 +240,24 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    marginBottom: 31,
+    paddingHorizontal: 13,
+  },
+  transactionIconFlagWrapper: {
+    maxWidth: 32,
+    width: 32,
+    maxHeight: 32,
+    height: 32,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 5,
+    marginRight: 15,
   },
   transactionBodyTitle: {
     fontFamily: 'Exo2-SemiBold',
     letterSpacing: -0.5,
     fontSize: 15,
+    marginBottom: 24,
   },
   starRatingWrapper: {
     display: 'flex',
@@ -316,6 +275,39 @@ const styles = StyleSheet.create({
     fontFamily: 'Exo2-SemiBold',
     marginBottom: 16,
   },
+  ratingMascotIcon: {
+    marginBottom: 19,
+  },
+  satisfactionItem: {
+    borderStyle: 'solid',
+    marginRight: 18,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    marginBottom: 12,
+    borderRadius: 13.5,
+  },
+  satisfactionItemWrapper: {
+    display: 'flex',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  submitButton: {
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#30A6FF',
+    height: 50,
+    borderRadius: 6,
+  },
+  submitButtonText: {
+    fontFamily: 'Exo2-Bold',
+    color: '#FFFFFF',
+    fontSize: 17,
+  },
+  submitButtonWrapper: {width: '100%'},
 });
 
 export default UserRate;

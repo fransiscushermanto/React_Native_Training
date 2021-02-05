@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev:android": "react-native run-android",
+    "start:cold": "react-native start --reset-cache",
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "jest",
@@ -11,7 +12,6 @@
   },
   "dependencies": {
     "react": "16.13.1",
-    "react-devtools": "^4.10.1",
     "react-native": "0.63.4",
     "react-native-elements": "^3.1.0",
     "react-native-safe-area-context": "^3.1.9",
