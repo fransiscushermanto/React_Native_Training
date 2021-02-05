@@ -9,7 +9,8 @@ import {
 import {useAppRating} from './useAppRating';
 import {BottomSheet} from 'react-native-elements';
 import StarRating from './StarRating';
-import {IconClose, SwitzerlandFlag, GoodReview} from './Icons';
+import {IconClose, SwitzerlandFlag} from './Icons';
+import MoliReactionComponent from './MoliReactionComponent';
 
 interface IUserRateDialogProps {
   show: boolean;
@@ -77,7 +78,7 @@ function UserRate({show, setShow}: IUserRateDialogProps) {
               How's your transaction experience?
             </Text>
             <View style={styles.ratingMascotIcon}>
-              <GoodReview />
+              <MoliReactionComponent rating={rating} />
             </View>
             <View style={styles.topLevelStarRatingWrapper}>
               <View style={styles.starRatingWrapper}>
