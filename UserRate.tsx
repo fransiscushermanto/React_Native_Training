@@ -1,4 +1,4 @@
-import React, {useCallback} from 'react';
+import React from 'react';
 import {
   StyleSheet,
   View,
@@ -43,25 +43,10 @@ function UserRate({show, setShow}: IUserRateDialogProps) {
 
   const {
     rating,
-    setRating,
+    onRatingClick,
     satisfactionItems,
-    setSatisfactionItems,
+    onSelectSatisfaction,
   } = useAppRating(5, satisfactionJSON);
-
-  const onRatingClick = useCallback(
-    (id: number) => {
-      setRating(rating === id && rating === 1 ? 0 : id);
-    },
-    [rating, setRating],
-  );
-
-  const onSelectSatisfaction = (id: number) => {
-    let temp = [...satisfactionItems];
-    let target = temp.filter((tempItem) => tempItem.id === id)[0];
-    let indexTarget = temp.indexOf(target);
-    temp[indexTarget].active = !temp[indexTarget].active;
-    setSatisfactionItems(temp);
-  };
 
   return (
     <>
@@ -94,16 +79,11 @@ function UserRate({show, setShow}: IUserRateDialogProps) {
             <View style={styles.ratingMascotIcon}>
               <GoodReview />
             </View>
-            <View
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
+            <View style={styles.topLevelStarRatingWrapper}>
               <View style={styles.starRatingWrapper}>
                 <StarRating
                   onStarClick={onRatingClick}
+                  // eslint-disable-next-line react-native/no-inline-styles
                   style={{marginBottom: 30}}
                   value={rating}
                   maxValue={5}
@@ -308,6 +288,12 @@ const styles = StyleSheet.create({
     fontSize: 17,
   },
   submitButtonWrapper: {width: '100%'},
+  topLevelStarRatingWrapper: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });
 
 export default UserRate;

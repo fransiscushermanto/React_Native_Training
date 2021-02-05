@@ -1,4 +1,5 @@
-import {useEffect, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
+import produce from 'immer';
 
 function useAppRating(
   maxValue: number,
@@ -25,13 +26,28 @@ function useAppRating(
     }
 
     handleRatingChange();
-  }, [rating]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rating, maxValue]);
+
+  const onRatingClick = useCallback((id: number) => {
+    setRating(id);
+  }, []);
+
+  const onSelectSatisfaction = useCallback((id: number) => {
+    setSatisfactionItems((prevItem) =>
+      produce(prevItem, (draft) => {
+        const target = draft.filter((tempItem) => tempItem.id === id)[0];
+        const indexTarget = draft.indexOf(target);
+        draft[indexTarget].active = !draft[indexTarget].active;
+      }),
+    );
+  }, []);
 
   return {
+    onRatingClick,
     rating,
-    setRating,
     satisfactionItems,
-    setSatisfactionItems,
+    onSelectSatisfaction,
   };
 }
 
